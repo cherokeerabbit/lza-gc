@@ -1,7 +1,6 @@
 ./source/node_modules/*
 source/node_modules/*
 source/node_modules
-./source/packages/*
 *.js
 !jest.config.js
 *.d.ts
