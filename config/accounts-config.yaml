@@ -1,0 +1,70 @@
+mandatoryAccounts:
+  - name: Management
+    description: >-
+      The management (primary) account. Do not change the name field for this
+      mandatory account. Note, the account name key does not need to match the
+      AWS account name.
+    email: nndata-aws-admin@nndata.com
+    organizationalUnit: Root
+    warm: false
+  - name: LogArchive
+    description: >-
+      The log archive account. Do not change the name field for this mandatory
+      account. Note, the account name key does not need to match the AWS account
+      name.
+    email: aws-logs-gc@nndata.com
+    organizationalUnit: Security
+    warm: false
+  - name: Audit
+    description: >-
+      The security audit account (also referred to as the audit account). Do not
+      change the name field for this mandatory account. Note, the account name
+      key does not need to match the AWS account name.
+    email: aws-audit-gc@nndata.com
+    organizationalUnit: Security
+    warm: false
+workloadAccounts:
+  - name: SharedServices
+    description: Shared services account for GovCloud.
+    email: aws-vdms-gc@nndata.com
+    organizationalUnit: Infrastructure
+  - name: Network
+    description: Network account for GovCloud.
+    email: aws-vdss-gc@nndata.com
+    organizationalUnit: Infrastructure
+  - name: Development
+    description: Development account for GovCloud.
+    email: aws-dev-gc@nndata.com
+    organizationalUnit: Testing
+  - name: QA
+    description: QA account for GovCloud.
+    email: aws-qa-gc@nndata.com
+    organizationalUnit: Testing
+  - name: Stage01
+    description: Stage01 account for GovCloud.
+    email: aws-stg01-gc@nndata.com
+    organizationalUnit: Production
+  - name: Production
+    description: Production account for GovCloud.
+    email: aws-prod-gc@nndata.com
+    organizationalUnit: Production
+
+accountIds:
+  - email: nndata-aws-admin@nndata.com
+    accountId: '390106326275'  
+  - email: aws-logs-gc@nndata.com
+    accountId: '394591640413'  
+  - email: aws-audit-gc@nndata.com
+    accountId: '394588556318'  
+  - email: aws-vdms-gc@nndata.com
+    accountId: '395608873644'
+  - email: aws-vdss-gc@nndata.com
+    accountId: '395612705500'
+  - email: aws-dev-gc@nndata.com
+    accountId: '428558638087'
+  - email: aws-qa-gc@nndata.com
+    accountId: '428562339830'
+  - email: aws-stg01-gc@nndata.com
+    accountId: '428565828112'
+  - email: aws-prod-gc@nndata.com
+    accountId: '428568452345'

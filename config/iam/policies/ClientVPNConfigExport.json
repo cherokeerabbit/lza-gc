@@ -1,0 +1,16 @@
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "AllowExportVPNClientConfig",
+      "Effect": "Allow",
+      "Action": [
+        "ec2:ExportClientVpnClientConfiguration",
+        "ec2:DescribeClientVpnEndpoints",
+        "ec2:DescribeClientVpnTargetNetworks",
+        "ec2:DescribeClientVpnConnections"
+      ],
+      "Resource": "*"
+    }
+  ]
+}

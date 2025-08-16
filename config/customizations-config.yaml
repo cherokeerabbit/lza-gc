@@ -1,0 +1,60 @@
+customizations:
+  stacks:
+    - name: breakglass-user-stack
+      description: Creates a break-glass IAM user in GovCloud
+      regions:
+        - us-gov-west-1
+      accounts:
+        - SharedServices
+        - Network
+        - Development
+        - QA
+        - Stage01
+        - Production
+      template: templates/create-breakglass-user.yaml
+      parameters:
+        - parameterKey: UserName
+          parameterValue: BreakglassUser
+        - parameterKey: SecretName
+          parameterValue: breakglass/GovCloud-bg-user  # Or customize per account          
+    - name: client-vpn-stack
+      description: Client VPN endpoint with SAML (IAM Identity Center) in GovCloud using
+        SSM param lookups
+      regions:
+      - us-gov-west-1
+      accounts:
+      - Network
+      template: templates/client-vpn.yaml
+      parameters:
+      - parameterKey: ServerCertificateArn
+        parameterValue: arn:aws-us-gov:acm:us-gov-west-1:395612705500:certificate/e0e2c68d-cf65-4060-80e5-5240ae2c09b0
+      - parameterKey: ClientCidr
+        parameterValue: 10.255.0.0/22
+      - parameterKey: VpcId
+        parameterValue: '{{ssm:/accelerator/network/vpc/Network-Boundary/id}}'
+      - parameterKey: AssocSubnetIdA
+        parameterValue: '{{ssm:/accelerator/network/vpc/Network-Boundary/subnet/Network-Boundary-Trust-A/id}}'
+      - parameterKey: AssocSubnetIdB
+        parameterValue: '{{ssm:/accelerator/network/vpc/Network-Boundary/subnet/Network-Boundary-Trust-B/id}}'
+      - parameterKey: SAMLProviderArn
+        parameterValue: ''
+      - parameterKey: SamlMetadataDocument
+        parameterValue: "<?xml version=\"1.0\" encoding=\"UTF-8\"?><md:EntityDescriptor\
+          \ xmlns:md=\"urn:oasis:names:tc:SAML:2.0:metadata\" entityID=\"https://portal.sso.us-gov-west-1.amazonaws.com/saml/assertion/MzkwMTA2MzI2Mjc1X2lucy03MDFhNzRjYmMwN2FjODJm\"\
+          >\n  <md:IDPSSODescriptor WantAuthnRequestsSigned=\"false\" protocolSupportEnumeration=\"\
+          urn:oasis:names:tc:SAML:2.0:protocol\">\n    <md:KeyDescriptor use=\"signing\"\
+          >\n      <ds:KeyInfo xmlns:ds=\"http://www.w3.org/2000/09/xmldsig#\">\n  \
+          \      <ds:X509Data>\n          <ds:X509Certificate>MIIDBjCCAe6gAwIBAgIEPjIyPjANBgkqhkiG9w0BAQsFADBFMRYwFAYDVQQDDA1hbWF6b25hd3MuY29tMQ0wCwYDVQQLDARJREFTMQ8wDQYDVQQKDAZBbWF6b24xCzAJBgNVBAYTAlVTMB4XDTI1MDgxNDA1MjIyMFoXDTMwMDgxNDA1MjIyMFowRTEWMBQGA1UEAwwNYW1hem9uYXdzLmNvbTENMAsGA1UECwwESURBUzEPMA0GA1UECgwGQW1hem9uMQswCQYDVQQGEwJVUzCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAKhTj9R2qI5P7cj9ZXfnIMr5zLorinG1dv4ok+ctqsz4rP7Y/XtXAARRlcDQPQo12SoiQVkb37u8Gv5J82wgo4dYw0OtSrehteah4NZ0Ddp5l01RlGKL2mYCCuZz/Eh5tDA8LTdWhAhrhWE/08IOYlnh3Jelkmfu8N4TmhPzoNkJVRvM1EDzGSha2Kme+jjQqT5MrsVsw5qlBpxqni/lGVAgXGVY6raOU1kctRFPO4953g4tTFByBXLgbfNOR29Ab7wirbjoWBrLkYsU50tzprldGbfIZIBoTZsNSJylweGRNonKMlUod9E1hcmIu7XFHv2IP/lTT7UmEZ5S/FeLxBcCAwEAATANBgkqhkiG9w0BAQsFAAOCAQEAVrdMvgIHaCTqczQYJ58BfhNXqkGJLgfPG148EbdVv1PRkXfKfaBXeZl66cBTHOelg0edn8xmpCGF3RqJg6reS5HuRxnaptCj1CsRDia9ivq0h9EkxT7imPgr5XVt8HVQza+baYjrU3qJGoRUvKhCTphjmDdP66aMNaLVUhn89QKJUZfr7h0JxolUre6P+yV3FOCcidds8lcwxvgs0suIS6RqI9wYpb5mTwQTV7p/4c1CjbBX8AgVXVajibpbiNPQLphuNIPm/Uugefy9VgkTfZAfRIpZ3hcWyEpB6mizcRIRBx72uguat4iiaUOIKCmTV5b1VZv6WjVEY1imKR5+ZA==</ds:X509Certificate>\n\
+          \        </ds:X509Data>\n      </ds:KeyInfo>\n    </md:KeyDescriptor>\n  \
+          \  <md:SingleLogoutService Binding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST\"\
+          \ Location=\"https://portal.sso.us-gov-west-1.amazonaws.com/saml/logout/MzkwMTA2MzI2Mjc1X2lucy03MDFhNzRjYmMwN2FjODJm\"\
+          />\n    <md:SingleLogoutService Binding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect\"\
+          \ Location=\"https://portal.sso.us-gov-west-1.amazonaws.com/saml/logout/MzkwMTA2MzI2Mjc1X2lucy03MDFhNzRjYmMwN2FjODJm\"\
+          />\n    <md:NameIDFormat>urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified</md:NameIDFormat>\n\
+          \    <md:SingleSignOnService Binding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST\"\
+          \ Location=\"https://portal.sso.us-gov-west-1.amazonaws.com/saml/assertion/MzkwMTA2MzI2Mjc1X2lucy03MDFhNzRjYmMwN2FjODJm\"\
+          />\n    <md:SingleSignOnService Binding=\"urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect\"\
+          \ Location=\"https://portal.sso.us-gov-west-1.amazonaws.com/saml/assertion/MzkwMTA2MzI2Mjc1X2lucy03MDFhNzRjYmMwN2FjODJm\"\
+          />\n  </md:IDPSSODescriptor>\n</md:EntityDescriptor>"
+      - parameterKey: EnableConnectionLogs
+        parameterValue: 'false'

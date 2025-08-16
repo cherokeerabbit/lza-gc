@@ -1,0 +1,391 @@
+############################################################################################################
+# For additional configurable services, features, and property descriptions,                               #
+# please review class IamConfig reference in our TypeDoc:                                                  #
+# https://awslabs.github.io/landing-zone-accelerator-on-aws/classes/_aws_accelerator_config.IamConfig.html #
+############################################################################################################
+
+policySets:
+  - name: CDKDeployerPolicySet
+    deploymentTargets:
+      organizationalUnits:
+        - Infrastructure
+        - Testing
+        - Production
+    policies:
+      - name: CDKDeployerPermissions
+        policy: iam/policies/CDKDeployerPermissions.json  # required
+        # policyFile: iam/policies/CDKDeployerPermissions.json
+
+  - name: ClientVPNDownloadPolicySet
+    deploymentTargets:
+      accounts:
+        - Network
+    policies:
+      - name: ClientVPNConfigExport
+        policy: iam/policies/ClientVPNConfigExport.json  # required
+
+roleSets:
+  - deploymentTargets:
+      organizationalUnits:
+        - Root
+    roles:
+      - name: EC2-Default-SSM-AD-Role
+        instanceProfile: true
+        assumedBy:
+          - type: service
+            principal: ec2.amazonaws.com
+        policies:
+          awsManaged:
+            - AmazonSSMManagedInstanceCore
+            - AmazonSSMDirectoryServiceAccess
+            - CloudWatchAgentServerPolicy
+
+  - deploymentTargets:
+      accounts:
+        - SharedServices
+    roles:
+      - name: CDK-Deployer-SharedServices
+        assumedBy:
+          - type: account
+            principal: "395608873644"
+        policies:
+          customerManaged:
+            - CDKDeployerPermissions
+
+
+  - deploymentTargets:
+      accounts:
+        - Network
+    roles:
+      - name: CDK-Deployer-Network
+        assumedBy:
+          - type: account
+            principal: "395612705500"
+        policies:
+          customerManaged:
+            - CDKDeployerPermissions
+
+  - deploymentTargets:
+      accounts:
+        - Network
+    roles:
+      - name: Client-VPN-Download-Network
+        assumedBy:
+          - type: account
+            principal: "395612705500"
+        policies:
+          customerManaged:
+            - ClientVPNConfigExport
+
+
+  - deploymentTargets:
+      accounts:
+        - Development
+    roles:
+      - name: CDK-Deployer-Development
+        assumedBy:
+          - type: account
+            principal: "428558638087"
+        policies:
+          customerManaged:
+            - CDKDeployerPermissions
+
+
+  - deploymentTargets:
+      accounts:
+        - QA
+    roles:
+      - name: CDK-Deployer-QA
+        assumedBy:
+          - type: account
+            principal: "428562339830"
+        policies:
+          customerManaged:
+            - CDKDeployerPermissions
+
+
+  - deploymentTargets:
+      accounts:
+        - Stage01
+    roles:
+      - name: CDK-Deployer-Stage01
+        assumedBy:
+          - type: account
+            principal: "428565828112"
+        policies:
+          customerManaged:
+            - CDKDeployerPermissions
+
+
+  - deploymentTargets:
+      accounts:
+        - Production
+    roles:
+      - name: CDK-Deployer-Production
+        assumedBy:
+          - type: account
+            principal: "428568452345"
+        policies:
+          customerManaged:
+            - CDKDeployerPermissions
+
+
+groupSets:
+  - name: GovCloudDevelopers
+    deploymentTargets:
+      organizationalUnits:
+        - Testing
+        - Production
+    users:
+      - matt.beckwith@nndata.com
+      - wyatt.shabe@nndata.com
+    groups:
+      - name: GovCloudDevelopers
+
+userSets: []
+
+#######################################################################################################################
+# AWS IAM Identity Center configuration                                                                               #
+# For AWS Control Tower based installation, AWS Identity Center is enabled automatically                              #
+# Tasks that be performed in the delegated administrator account                                                      #
+# https://docs.aws.amazon.com/singlesignon/latest/userguide/delegated-admin.html#delegated-admin-tasks-member-account #
+#######################################################################################################################
+identityCenter:
+  name: IdentityCenter
+  # Assigning delegated administration as Audit account
+  # Preview review AWS Security Reference Architecture for assigning other account as delegated administrator
+  # https://docs.aws.amazon.com/prescriptive-guidance/latest/security-reference-architecture/shared-services.html
+  delegatedAdminAccount: Audit
+  # Predefined permission sets
+  # https://docs.aws.amazon.com/singlesignon/latest/userguide/permissionsetpredefined.html
+  identityCenterPermissionSets:
+    # Creating permission sets
+    - name: AWSAccelerator-Billing
+    # Attaching policy
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/Billing
+      # Setting session duration
+      sessionDuration: 60
+    - name: AWSAccelerator-DatabaseAdmin
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/DatabaseAdministrator
+      sessionDuration: 60
+    - name: AWSAccelerator-DataScientist
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/DataScientist
+      sessionDuration: 60
+    - name: AWSAccelerator-NetworkAdmin
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/NetworkAdministrator
+      sessionDuration: 60
+    - name: AWSAccelerator-ReadOnlyAccess
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/ReadOnlyAccess
+      sessionDuration: 60
+    - name: AWSAccelerator-SecurityAudit
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/SecurityAudit
+      sessionDuration: 60
+    - name: AWSAccelerator-SupportUser
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/SupportUser
+      sessionDuration: 60
+    - name: AWSAccelerator-SystemAdmin
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/job-function/SystemAdministrator
+      sessionDuration: 60
+    - name: GovCloud-Developer
+      description: Developer access to GovCloud resources
+      policies:
+        awsManaged:
+          - arn:aws-us-gov:iam::aws:policy/AmazonEC2FullAccess
+          - arn:aws-us-gov:iam::aws:policy/AWSCloudFormationFullAccess
+          - arn:aws-us-gov:iam::aws:policy/AmazonDynamoDBFullAccess
+          - arn:aws-us-gov:iam::aws:policy/SecretsManagerReadWrite
+          - arn:aws-us-gov:iam::aws:policy/AWSKeyManagementServicePowerUser
+      sessionDuration: 120
+    - name: CDK-Deployer
+      description: Least-privilege permission set for CDK bootstrap and deployment
+      sessionDuration: 120
+      policies:
+        customerManaged:
+          - CDKDeployerPermissions
+    - name: AWSAccelerator-VPNDownloader
+      description: Allows export of VPN client configuration
+      sessionDuration: 60
+      policies:
+        customerManaged:
+          - ClientVPNConfigExport          
+    - name: ClientVPNAccess
+      description: SAML role-assume permission set for VPN users
+      sessionDuration: 60
+      policies:
+        inline:
+          - name: AssumeClientVPNSAML2Role
+            document: |
+              {
+                "Version": "2012-10-17",
+                "Statement": [
+                  {
+                    "Effect": "Allow",
+                    "Action": "sts:AssumeRole",
+                    "Resource": "arn:aws-us-gov:iam::395612705500:role/ClientVPNSAML2Role"
+                  }
+                ]
+              }
+
+
+  identityCenterAssignments:
+    - name: AssignGovCloudDeveloperAccess
+      permissionSetName: GovCloud-Developer
+      # IdentityStoreId: d-98677a72f6
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3  
+      deploymentTargets:
+        organizationalUnits:
+          - Testing
+          - Production
+          
+    - name: AssignSystemAdminToCoreGovCloudAdmins
+      permissionSetName: AWSAccelerator-SystemAdmin
+      principalType: GROUP
+      principalId: 78011288-80d1-70e5-8dd2-c9cfb4ed10a4
+      deploymentTargets:
+        organizationalUnits:
+          - Infrastructure
+          - Security
+          - Testing
+          - Production
+    - name: AssignSharedservicesAdminToGovCloudAdmins
+      permissionSetName: AWSAccelerator-SystemAdmin
+      principalType: GROUP
+      principalId: 98c1d208-80e1-7066-43b7-12c3dad9afde
+      deploymentTargets:
+        accounts:
+          - SharedServices
+
+    - name: AssignCDKDeployerAccess-SharedServices
+      permissionSetName: AWSAccelerator-SystemAdmin
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3  # ← Replace with actual group ID if different
+      deploymentTargets:
+        accounts:
+          - SharedServices
+
+    - name: AssignCDKDeployerAccess-Network
+      permissionSetName: AWSAccelerator-SystemAdmin
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3
+      deploymentTargets:
+        accounts:
+          - Network
+
+    - name: AssignCDKDeployerAccess-Development
+      permissionSetName: AWSAccelerator-SystemAdmin
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3
+      deploymentTargets:
+        accounts:
+          - Development
+
+    - name: AssignCDKDeployerAccess-QA
+      permissionSetName: AWSAccelerator-SystemAdmin
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3
+      deploymentTargets:
+          accounts:
+            - QA
+
+    - name: AssignCDKDeployerAccess-Stage01
+      permissionSetName: AWSAccelerator-SystemAdmin
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3
+      deploymentTargets:
+          accounts:
+            - Stage01
+
+    - name: AssignCDKDeployerAccess-Production
+      permissionSetName: AWSAccelerator-SystemAdmin
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3
+      deploymentTargets:
+          accounts:
+            - Production
+
+    - name: AssignCDKDeployerAccess-GovCloudDevelopers
+      permissionSetName: CDK-Deployer
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3
+      deploymentTargets:
+        organizationalUnits:
+          - Testing
+          - Production
+
+    - name: AssignCDKDeployerAccess-CoreGovCloudAcctAdmins
+      permissionSetName: CDK-Deployer
+      principalType: GROUP
+      principalId: 78011288-80d1-70e5-8dd2-c9cfb4ed10a4
+      deploymentTargets:
+        organizationalUnits:
+          - Infrastructure
+          - Security
+          - Testing
+          - Production
+
+    - name: AssignCDKDeployerAccess-SharedServicesAdmin
+      permissionSetName: CDK-Deployer
+      principalType: GROUP
+      principalId: 98c1d208-80e1-7066-43b7-12c3dad9afde
+      deploymentTargets:
+        accounts:
+          - SharedServices
+
+    - name: AssignNetworkAdminToCoreGovCloudAdmins
+      permissionSetName: AWSAccelerator-NetworkAdmin
+      principalType: GROUP
+      principalId: 78011288-80d1-70e5-8dd2-c9cfb4ed10a4 # CoreGovCloudAdmin
+      deploymentTargets:
+        accounts:
+          - Network
+
+    - name: AssignNetworkAdminToGovCloudDevelopers
+      permissionSetName: AWSAccelerator-NetworkAdmin
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3 # GovCloudDevelopers
+      deploymentTargets:
+        organizationalUnits:
+          - Testing
+          - Production
+
+    - name: AssignReadOnlyToGovCloudDevelopers
+      permissionSetName: AWSAccelerator-ReadOnlyAccess
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3
+      deploymentTargets:
+        accounts:
+          - Network
+
+    - name: AssignClientVPNConfigExportToVPNDownloader
+      permissionSetName: AWSAccelerator-VPNDownloader
+      principalType: GROUP
+      principalId: d871e298-4001-7038-03d2-2d92902a3c2b # GovCloudVPNDownloaders 
+      deploymentTargets:
+        accounts:
+          - Network
+
+    - name: AssignClientVPNAccess-GovCloudDevelopers
+      permissionSetName: ClientVPNAccess
+      principalType: GROUP
+      principalId: 48d112d8-e081-707b-51ce-6274598f09b3  # ← Your GovCloudDevelopers group ID
+      deploymentTargets:
+        accounts:
+          - Network
+          

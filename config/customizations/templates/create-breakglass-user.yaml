@@ -1,0 +1,63 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Create break-glass IAM user and store credentials in Secrets Manager
+
+Parameters:
+  UserName:
+    Type: String
+    Default: AWSBreakglass
+    Description: IAM user name
+  SecretName:
+    Type: String
+    Default: breakglass/credentials
+    Description: Name of the Secrets Manager secret
+
+Resources:
+  BreakglassUser:
+    Type: AWS::IAM::User
+    Properties:
+      UserName: !Ref UserName
+      ManagedPolicyArns:
+        - arn:aws-us-gov:iam::aws:policy/AdministratorAccess      
+      LoginProfile:
+        Password: "NEE963741dga852!"          # <-- Set initial password here
+        PasswordResetRequired: false           # <-- Force password change on first login
+
+  BreakglassAccessKey:
+    Type: AWS::IAM::AccessKey
+    Properties:
+      UserName: !Ref BreakglassUser
+      Status: Active
+
+  AdminGroup:
+    Type: AWS::IAM::Group
+    Properties:
+      GroupName: AdminGroup
+      ManagedPolicyArns:
+        - arn:aws-us-gov:iam::aws:policy/AdministratorAccess
+
+  AddUserToAdminGroup:
+    Type: AWS::IAM::UserToGroupAddition
+    Properties:
+      GroupName: !Ref AdminGroup
+      Users:
+        - !Ref BreakglassUser
+
+  BreakglassSecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: !Ref SecretName
+      Description: Break-glass IAM user credentials
+      SecretString: !Sub
+        - |
+          {
+            "AccessKeyId": "${AccessKeyId}",
+            "SecretAccessKey": "${SecretAccessKey}"
+          }
+        - AccessKeyId: !Ref BreakglassAccessKey
+          SecretAccessKey: !GetAtt BreakglassAccessKey.SecretAccessKey
+
+Outputs:
+  IAMUser:
+    Value: !Ref BreakglassUser
+  SecretArn:
+    Value: !Ref BreakglassSecret

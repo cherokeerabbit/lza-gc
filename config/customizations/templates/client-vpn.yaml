@@ -1,0 +1,130 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Client VPN endpoint with SAML (AWS IAM Identity Center)
+
+Parameters:
+  VpcId:
+    Type: String
+  AssocSubnetIdA:
+    Type: String
+  AssocSubnetIdB:
+    Type: String
+  ServerCertificateArn:
+    Type: String
+  ClientCidr:
+    Type: String
+  SAMLProviderArn:
+    Type: String
+    Default: ""
+  SamlMetadataDocument:
+    Type: String
+    Default: ""
+  EnableConnectionLogs:
+    Type: String
+    AllowedValues: ["true", "false"]
+    Default: "false"
+
+Conditions:
+  CreateProvider: !Equals [!Ref SAMLProviderArn, ""]
+
+Resources:
+  # Optional: create SAML provider if one not passed
+  SamlProvider:
+    Type: AWS::IAM::SAMLProvider
+    Condition: CreateProvider
+    Properties:
+      Name: clientvpn-idc-provider
+      SamlMetadataDocument: !Ref SamlMetadataDocument
+
+  ClientVpnSG:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Client VPN security group
+      VpcId: !Ref VpcId
+      SecurityGroupIngress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 10.0.0.0/8
+      SecurityGroupEgress:
+        - IpProtocol: -1
+          FromPort: -1
+          ToPort: -1
+          CidrIp: 0.0.0.0/0
+
+  ClientVpnEndpoint:
+    Type: AWS::EC2::ClientVpnEndpoint
+    Properties:
+      AuthenticationOptions:
+        - Type: federated-authentication
+          FederatedAuthentication:
+            SAMLProviderArn: !If
+              - CreateProvider
+              - !Ref SamlProvider
+              - !Ref SAMLProviderArn
+      ClientCidrBlock: !Ref ClientCidr
+      ConnectionLogOptions:
+        Enabled: !Ref EnableConnectionLogs
+      ServerCertificateArn: !Ref ServerCertificateArn
+      SecurityGroupIds:
+        - !Ref ClientVpnSG
+      VpcId: !Ref VpcId
+      SplitTunnel: true
+      TransportProtocol: udp
+      VpnPort: 443
+      Description: GovCloud Client VPN with Identity Center
+
+  AssocSubnetA:
+    Type: AWS::EC2::ClientVpnTargetNetworkAssociation
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      SubnetId: !Ref AssocSubnetIdA
+
+  AssocSubnetB:
+    Type: AWS::EC2::ClientVpnTargetNetworkAssociation
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      SubnetId: !Ref AssocSubnetIdB
+
+  # Allow all authenticated users
+  AuthRuleAll:
+    Type: AWS::EC2::ClientVpnAuthorizationRule
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      TargetNetworkCidr: 10.0.0.0/8
+      AuthorizeAllGroups: true
+
+  # Add routes to all workload VPC CIDRs (replace with your actual CIDRs)
+  RouteSharedServices:
+    Type: AWS::EC2::ClientVpnRoute
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      DestinationCidrBlock: 10.1.0.0/20
+      TargetVpcSubnetId: !Ref AssocSubnetIdA
+
+  RouteDev:
+    Type: AWS::EC2::ClientVpnRoute
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      DestinationCidrBlock: 10.10.0.0/20
+      TargetVpcSubnetId: !Ref AssocSubnetIdA
+
+  RouteQA:
+    Type: AWS::EC2::ClientVpnRoute
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      DestinationCidrBlock: 10.20.0.0/20
+      TargetVpcSubnetId: !Ref AssocSubnetIdA
+
+  RouteStage01:
+    Type: AWS::EC2::ClientVpnRoute
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      DestinationCidrBlock: 10.30.0.0/20
+      TargetVpcSubnetId: !Ref AssocSubnetIdA
+
+  RouteProd:
+    Type: AWS::EC2::ClientVpnRoute
+    Properties:
+      ClientVpnEndpointId: !Ref ClientVpnEndpoint
+      DestinationCidrBlock: 10.40.0.0/20
+      TargetVpcSubnetId: !Ref AssocSubnetIdA
