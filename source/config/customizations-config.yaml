@@ -11,7 +11,7 @@ customizations:
         - QA
         - Stage01
         - Production
-      template: templates/create-breakglass-user.yaml
+      template: customizations/templates/create-breakglass-user.yaml
       parameters:
         - parameterKey: UserName
           parameterValue: BreakglassUser
@@ -24,7 +24,7 @@ customizations:
       - us-gov-west-1
       accounts:
       - Network
-      template: templates/client-vpn.yaml
+      template: customizations/templates/client-vpn.yaml
       parameters:
       - parameterKey: ServerCertificateArn
         parameterValue: arn:aws-us-gov:acm:us-gov-west-1:395612705500:certificate/e0e2c68d-cf65-4060-80e5-5240ae2c09b0
